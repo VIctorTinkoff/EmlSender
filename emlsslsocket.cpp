@@ -112,7 +112,7 @@ void EmlSSlSocket::socketReadyRead()
 {
     QString  ansv = QString::fromUtf8(m_p_socket->readAll());
     qDebug() << "S:" << ansv;
-    Smtp::addLog("S:" + ansv);
+    Smtp::addLog(QString("S:" + ansv).replace(QRegularExpression("\r\n$"),""));
 
     if (ansv.contains("220"))
     {

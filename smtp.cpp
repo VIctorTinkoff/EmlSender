@@ -77,7 +77,7 @@ QByteArray findedAuthMethod()
     }
 
     qDebug() << "U: " << QByteArray("AUTH " + FIND_STRINGS[auth_find_method] + "\r\n");
-    addLog("U: " +  QByteArray("AUTH " + FIND_STRINGS[auth_find_method] + "\r\n"));
+    addLog("U: " +  QByteArray("AUTH " + FIND_STRINGS[auth_find_method]));
 
     return QByteArray("AUTH " + FIND_STRINGS[auth_find_method] + "\r\n") ;
 }
@@ -97,15 +97,18 @@ void login(const Eml::Account &account, QSslSocket *sock, const QString &ansv)
         break;
     case Smtp::LOGIN:
         QString str = ansv;
+
         str.replace(QRegularExpression("334"),"");
         str = QByteArray::fromBase64(str.toUtf8());
+
         if(str.contains("USERNAME",Qt::CaseInsensitive))
-        {   out = account.login.toBase64()+"\n\r";
+        {
+            out = account.login.toBase64()+"\r\n";
             sock->write(out);
         }
         else if(str.contains("PASSWORD",Qt::CaseInsensitive))
         {
-            out = account.passwd.toBase64()+"\n\r";
+            out = account.passwd.toBase64()+"\r\n";
             sock->write(out);
         }
         break;
@@ -134,7 +137,7 @@ void addLog(const QString &log)
     {
         QTextStream log_stream(&f);
 
-        log_stream  << QDateTime::currentDateTime().toString() << ">> " <<log ;
+        log_stream  << QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss") << ">> " <<log << "\r\n" ;
 
         f.close();
     }
