@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QHostAddress>
-#include "eml.h"
+#include "emlmessage.h"
 
 
 //class QHostAddress;
@@ -17,7 +17,7 @@ class EmlSSlSocket : public QObject
 {
     Q_OBJECT
 public:
-    explicit EmlSSlSocket(QObject *parent = 0);
+    explicit EmlSSlSocket(EmlMessage * mes = 0, QObject *parent = 0);
     virtual ~EmlSSlSocket();
     void setAccount(const Eml::Account & account );
     void setPort(int port);
@@ -30,6 +30,7 @@ signals:
 
 private:
     QSslSocket * m_p_socket;
+    EmlMessage * m_p_message;
     Eml::Account m_account;
 
     int m_nport;

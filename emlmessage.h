@@ -33,21 +33,33 @@ public:
 
 public:
     explicit EmlMessage(QObject *parent = 0);
-    QString  *createMessage(const QString  & sender);
+    QString  *createMessage(const QString  &body);
 
-    void add_to(const QString &to_str);
-    void add_cc(const QString &cc_str);
-    void add_bcc(const QString &bcc_str);
+    void set_from(const QByteArray &from_str);
+    void add_to(const QByteArray &to_str);
+    void add_cc(const QByteArray &cc_str);
+    void add_bcc(const QByteArray &bcc_str);
     void set_subject(const QString &subject);
+    const QByteArray &from();
+    const QByteArray &to();
 
+    void attach(const QString &attach);
+
+    const QString & mesage();
 
 private:
     QString m_message;
-    QString m_sender;
-    QString m_to;
-    QString m_cc;
-    QString m_bcc;
+
+    QByteArray m_sender;
+
+    QList<QByteArray> m_to;
+    QList<QByteArray> m_cc;
+    QList<QByteArray> m_bcc;
+
     QString m_subject;
+    QString m_body;
+
+    QList<QString> m_attach;
 
     EmlEncodeType m_hEnc;
 

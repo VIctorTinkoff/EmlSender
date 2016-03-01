@@ -27,7 +27,7 @@ struct Account {
 };
 
 
-QString eml_date();
+//QString eml_date();
 QString eml_createUniqueBoundId(const QString &name = "PART");
 QString eml_create_tag(const QString &str_val);
 /*
@@ -36,7 +36,7 @@ QString eml_create_tag(const QString &str_val);
  */
 QString enc(const QString &str, QChar coding='B');
 struct Header{
-    Header(const QString &from, const QString &to, const QString &subject, const QString & cc="",const QString & bcc="");
+    Header(const QString &subject);
     QString header;
 };
 

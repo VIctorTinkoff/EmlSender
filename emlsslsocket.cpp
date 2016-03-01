@@ -9,16 +9,18 @@
 #include "emlsslsocket.h"
 #include "smtp.h"
 
-EmlSSlSocket::EmlSSlSocket(QObject *parent)
+EmlSSlSocket::EmlSSlSocket(EmlMessage *mes, QObject *parent)
     : QObject(parent)
+    , m_p_message(mes)
     , m_account(Eml::Account())
 {
     m_p_socket = NULL;
     m_nport = Eml::port(Eml::S_POP3);
     connect(this,SIGNAL(signalError(QString)),this, SLOT(slotError(QString)));
 
-    Smtp::addLog("====================================== new session =========================================");
+    qDebug() << m_p_message->mesage();
 
+    Smtp::addLog("====================================== new session =========================================");
 }
 
 EmlSSlSocket::~EmlSSlSocket()
@@ -110,6 +112,8 @@ void EmlSSlSocket::socketEncripted()
 
 void EmlSSlSocket::socketReadyRead()
 {
+    static bool is_auth = false;
+
     QString  ansv = QString::fromUtf8(m_p_socket->readAll());
     qDebug() << "S:" << ansv;
     Smtp::addLog(QString("S:" + ansv).replace(QRegularExpression("\r\n$"),""));
@@ -118,18 +122,60 @@ void EmlSSlSocket::socketReadyRead()
     {
         Smtp::hello(m_account, m_p_socket);
     }
-    else if (ansv.contains("250"))
+    else if (ansv.contains("250") && !is_auth)
     {
         Smtp::checkAuthMethod(ansv);
-//        if(!Smtp::findedAuthMethod().isEmpty() )
-//        {
-            m_p_socket->write(Smtp::findedAuthMethod());
-//        }
+        //        if(!Smtp::findedAuthMethod().isEmpty() )
+        //        {
+        m_p_socket->write(Smtp::findedAuthMethod());
+        //        }
     }
     else if (ansv.contains("334"))
     {
         Smtp::login(m_account, m_p_socket, ansv);
     }
+    else if (ansv.contains("235"))
+    {
+        is_auth = true;
+        qDebug() << "MAIL FROM: " + m_p_message->from()+ " \r\n";
+        m_p_socket->write("MAIL FROM: " + m_p_message->from()+ " \r\n");
+    }
+    else if (ansv.contains("250") && is_auth)
+    {
+        static int id = 0;
+        if(id == 0)
+        {
+            QByteArray msg("RCPT TO: " + m_p_message->to() + " \r\n");
+            qDebug()  << msg;
+            m_p_socket->write(msg);
+            id++;
+        }
+
+        if (id == 1 )
+        {
+            QByteArray data("DATA \r\n");
+            qDebug() << data;
+
+            m_p_socket->write(data);
+            id++;
+
+        }
+        if (id == 2 )
+        {
+            //qDebug()<< "start:";
+            //qDebug()<<  *m_p_message->createMessage("Hello this is body");
+            //qDebug() << " end:";
+            //QByteArray ba = (*m_p_message->createMessage("Hello this is body")).toLatin1();
+            m_p_socket->write(m_p_message->mesage().toLatin1());
+            m_p_socket->write(" \r\n.\r\n ");
+            id++;
+        }
+        if (id == 3)
+        {
+            m_p_socket->write("QUIT \r\n");
+        }
+    }
+
 
 
 
@@ -151,7 +197,7 @@ void EmlSSlSocket::socketError(QAbstractSocket::SocketError err)
                         "The conection was refused." :  m_p_socket->errorString() ;
 
     qDebug() << stdError;
-     Smtp::addLog(stdError);
+    Smtp::addLog(stdError);
     //qDebug() << "socketError" ;
 }
 

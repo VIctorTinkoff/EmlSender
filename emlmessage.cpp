@@ -24,58 +24,24 @@ EmlMessage::EmlMessage(QObject *parent)
 
 }
 
-QString *EmlMessage::createMessage(const QString &sender)
+QString *EmlMessage::createMessage(const QString &body)
 {
-    m_sender = sender;
-
-    QString str =
-            "<html>\r\n"
-            "  <head>\r\n"
-            "    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n"
-            "    <title>Hello </title>\r\n"
-            "  </head>\r\n"
-            "  <body text=\"#FF0000\" bgcolor=\"#FFFFFF\">\r\n"
-            "   <h2><center> This is boody.</center></h2>\r\n"
-            "  <body text=\"#00FF00\" bgcolor=\"#FFFFFF\">\r\n"
-            "   <h1><center> Просто текст</center></h1>\r\n"
-            "  <body text=\"#000000\" bgcolor=\"#99FF99\">\r\n"
-            "   <h3><center> Текст на русском языке.</center></h3>\r\n"
-            "The default matching algorithm looks at both the file name "
-            "and the file contents, if necessary.<br> The file extension has "
-            "priority over the contents, but the contents will be used if "
-            "the file extension is unknown, or matches multiple MIME types.<br> "
-            "If fileInfo is a Unix symbolic link, the file that it refers to will "
-            "be used instead. If the file doesn't match any known pattern or data, "
-            "the default MIME type (application/octet-stream) is returned."
-            "  </body>\r\n"
-            "</html>\r\n";
-
-    QString str1 = "Новый текст \r\n"
-            "The default matching algorithm looks at both the file name "
-            "and the file contents, if necessary.<br> The file extension has "
-            "priority over the contents, but the contents will be used if "
-            "the file extension is unknown, or matches multiple MIME types.<br> "
-            "If fileInfo is a Unix symbolic link, the file that it refers to will "
-            "be used instead. If the file doesn't match any known pattern or data, "
-            "the default MIME type (application/octet-stream) is returned.";
-
-
-
-    Eml::Header h(m_sender, m_to, m_subject);
-
+    m_body = body;
+    Eml::Header h(m_subject);
     m_message.append(h.header);
 
-    //Eml::Part p(str1);
-    Eml::MultiPart p(str1);
-//    p.attach("D:/Android/Android Studio/plugins/svn4idea/lib/COPYING");
-//    p.attach("D:/Graphium/prj/Beyond/bin/data/gui/buttons/container_close_active.png");
-//    p.attach("C:/Users/Victor/Documents/Scanned Documents/коля_фото_садик.jpg");
-//    p.attach("C:/Users/Victor/Documents/dodatok_8_1.pdf");
-//    p.attach("C:/Users/Victor/Documents/icm.odt");
-//    p.attach("C:/Users/Victor/Documents/TeamViewer_Setup_ru.exe");
+//      Eml::Part p(m_body);
+      Eml::MultiPart p(m_body);
+
+      m_message.append(p.part);
+
+    for (int i = 0; i < m_attach.count(); ++i)
+    {
+        p.attach(m_attach.at(i));
+        m_message.append(p.part);
+    }
 
 
-    m_message.append(p.part);
 
 
     QFile f("test.eml");
@@ -89,22 +55,40 @@ QString *EmlMessage::createMessage(const QString &sender)
     return &m_message;
 }
 
-void EmlMessage::add_to(const QString &to_str)
+void EmlMessage::set_from(const QByteArray &from_str)
 {
-    if(m_to.isEmpty())
-    {
-        m_to.append(to_str);
-    }
-    else
-    {
-        m_to.append("," + to_str) ;
-    }
+    m_sender = from_str;
+}
 
+
+void EmlMessage::add_to(const QByteArray &to_str)
+{
+    m_to.push_back(to_str);
 }
 
 void EmlMessage::set_subject(const QString &subject)
 {
     m_subject = subject;
+}
+
+const QByteArray &EmlMessage::from()
+{
+    return m_sender;
+}
+
+const QByteArray &EmlMessage::to()
+{
+    return m_to.at(0);
+}
+
+void EmlMessage::attach(const QString &attach)
+{
+    m_attach.push_back(attach);
+}
+
+const QString &EmlMessage::mesage()
+{
+    return m_message;
 }
 
 

@@ -30,25 +30,25 @@ QString eml_createUniqueBoundId(const QString &name )
 
 }
 
-QString eml_date()
-{
-    int shift_utc =  QDateTime::currentDateTime()
-            .timeZone()
-            .standardTimeOffset(QDateTime()) / 60 / 60;
+//QString eml_date()
+//{
+//    int shift_utc =  QDateTime::currentDateTime()
+//            .timeZone()
+//            .standardTimeOffset(QDateTime()) / 60 / 60;
 
-    QDateTime utc_dt = QDateTime::currentDateTimeUtc();
+//    QDateTime utc_dt = QDateTime::currentDateTimeUtc();
 
-    return QString("Date: %1, %2 %3 %4 %5:%6:%7 %8")
-            .arg(week_str[utc_dt.date().dayOfWeek() - 1])
-            .arg(utc_dt.date().day())
-            .arg(month_str[utc_dt.date().month()-1])
-            .arg(utc_dt.date().year())
-            .arg(utc_dt.time().hour())
-            .arg(utc_dt.time().minute())
-            .arg(utc_dt.time().second())
-            .arg(QString::asprintf("+%04d",shift_utc)
-                 );
-}
+//    return QString("Date: %1, %2 %3 %4 %5:%6:%7 %8")
+//            .arg(week_str[utc_dt.date().dayOfWeek() - 1])
+//            .arg(utc_dt.date().day())
+//            .arg(month_str[utc_dt.date().month()-1])
+//            .arg(utc_dt.date().year())
+//            .arg(utc_dt.time().hour())
+//            .arg(utc_dt.time().minute())
+//            .arg(utc_dt.time().second())
+//            .arg(QString::asprintf("+%04d",shift_utc)
+//                 );
+//}
 
 QString eml_create_tag(const QString &str_val)
 {
@@ -105,17 +105,9 @@ QString enc(const QString &str, QChar coding)
 }
 
 
-Header::Header(const QString &from, const QString &to, const QString &subject, const QString &cc, const QString &bcc)
+Header::Header(const QString &subject)
 {
-    header.append(QString("Date: %1\r\n").arg(eml_date()));
-    header.append(QString("From: %1\r\n").arg(eml_create_tag(from)));
-    header.append(QString("To: %1\r\n").arg(eml_create_tag(to)));
     header.append(QString("Subject: %1\r\n").arg(eml_create_tag(subject)));
-    if(!cc.isEmpty())
-        header.append(QString("Cc: %1\r\n").arg(eml_create_tag(cc)));
-    if(!bcc.isEmpty())
-        header.append(QString("Bcc: %1\r\n").arg(eml_create_tag(bcc)));
-
     header.append("MIME-Version: 1.0 \r\n");
 }
 
