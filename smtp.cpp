@@ -143,7 +143,5 @@ void addLog(const QString &log)
     }
 }
 
-
-
 }//namespace Smtp
 
