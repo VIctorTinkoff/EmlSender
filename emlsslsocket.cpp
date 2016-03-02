@@ -22,8 +22,6 @@ EmlSSlSocket::EmlSSlSocket(EmlMessage *mes, QObject *parent)
 
     connect(this,SIGNAL(signalError(QString)),this, SLOT(slotError(QString)));
 
-    qDebug() << m_p_message->mesage();
-
     Smtp::addLog("====================================== new session =========================================");
 }
 
@@ -119,6 +117,7 @@ void EmlSSlSocket::socketReadyRead()
     static Smtp::State st = Smtp::ST_ERROR;
 
     QString  ansv = QString::fromUtf8(m_p_socket->readAll());
+    qDebug()<< "S: " << ansv;
     QByteArray tmp_arr;
 
     st = Smtp::decodeAnsver(ansv);
@@ -141,43 +140,39 @@ void EmlSSlSocket::socketReadyRead()
         m_p_socket->write(tmp_arr);
     }
     case Smtp::ST_TO:
-    case Smtp::ST_DATA:
-        static Smtp::State send_state = Smtp::ST_TO;
+        if (!m_recipiens.isEmpty())
+        {
+            QString rcpt(m_recipiens.front());
+            m_recipiens.pop_front();
 
-        switch (send_state) {
-        case Smtp::ST_TO:
-            if (!m_recipiens.isEmpty())
-            {
-                QString rcpt(m_recipiens.front());
-                m_recipiens.pop_front();
+            rcpt.replace(QRegularExpression(".*<"),"");
+            rcpt.replace(QRegularExpression(">"),"");
 
-                rcpt.replace(QRegularExpression(".*<"),"");
-                rcpt.replace(QRegularExpression(">"),"");
-
-                tmp_arr = "RCPT TO: " + rcpt.toLatin1() + " \r\n";
-                qDebug() <<"U:" << tmp_arr;
-                m_p_socket->write(tmp_arr);
-            }
-            else
-            {
-                send_state =Smtp::ST_DATA;
-            }
-            break;
-        case Smtp::ST_DATA:
-            tmp_arr = "DATA \r\n";
-            qDebug() << tmp_arr;
+            tmp_arr = "RCPT TO: " + rcpt.toLatin1() + " \r\n";
+            qDebug() <<"U:" << tmp_arr;
             m_p_socket->write(tmp_arr);
-            send_state = Smtp::ST_DATA_END;
-            break;
-        case Smtp::ST_DATA_END:
-            m_p_socket->write(m_p_message->mesage().toLatin1());
-            m_p_socket->write(" \r\n.\r\n ");
-            send_state = Smtp::ST_END;
-            break;
-        case Smtp::ST_END:
-            m_p_socket->write("QUIT \r\n");
-            break;
+
+            if(m_recipiens.isEmpty())
+                Smtp::decodeAnsver("",Smtp::ST_TO_OK );
+            //send_state =Smtp::ST_DATA;
         }
+        break;
+    case Smtp::ST_DATA:
+        tmp_arr = "DATA \r\n";
+        qDebug() << "U: " << tmp_arr;
+        m_p_socket->write(tmp_arr);
+         Smtp::decodeAnsver("",Smtp::ST_STRT_DAT);
+        break;
+    case Smtp::ST_DATA_OK:
+        m_p_socket->write(m_p_message->mesage().toLatin1());
+        m_p_socket->write(" \r\n.\r\n ");
+        qDebug() << "U: " << " \r\n.\r\n ";
+        break;
+    case Smtp::ST_END:
+        qDebug() << "U: " << " QUIT \r\n";
+        m_p_socket->write("QUIT\r\n");
+        //m_p_socket->close();
+        break;
     default:
         break;
     }

@@ -23,23 +23,20 @@ enum Auth_Method {
 };
 
 enum State{
-    ST_HELLO,
-    ST_AUTH,
-    ST_LOGIN,
-    ST_LOGIN_OK,
-    ST_LOGIN_ERR,
-    ST_FROM,
-    ST_FROM_OK,
-    ST_FROM_ERR,
-    ST_TO,
-    ST_TO_OK,
-    ST_TO_ERR,
-    ST_DATA,
-    ST_DATA_OK,
-    ST_DATA_ERR,
-    ST_DATA_END,
-    ST_END,
-    ST_ERROR
+    ST_NONE     = 0b0000000000000,
+    ST_HELLO    = 0b0000000000001,
+    ST_AUTH     = 0b0000000000010,
+    ST_LOGIN    = 0b0000000000100,
+    ST_LOGIN_OK = 0b0000000001000,
+    ST_FROM     = 0b0000000010000,
+    ST_FROM_OK  = 0b0000000100000,
+    ST_TO       = 0b0000001000000,
+    ST_TO_OK    = 0b0000010000000,
+    ST_DATA     = 0b0000100000000,
+    ST_DATA_OK  = 0b0001000000000,
+    ST_END      = 0b0010000000000,
+    ST_ERROR    = 0b0100000000000,
+    ST_STRT_DAT = 0b1000000000000,
 };
 
 void hello(const Eml::Account & account, QSslSocket *sock);
@@ -48,7 +45,7 @@ bool checkAuthMethod(const QString &ansver);
 Smtp::Auth_Method authMethod(const QString & str);
 Smtp::Auth_Method authMethod();
 
-Smtp::State decodeAnsver(const QString & ansv);
+Smtp::State decodeAnsver(const QString & ansv, State last_State = ST_NONE);
 
 QByteArray findedAuthMethod();
 

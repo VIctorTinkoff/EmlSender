@@ -142,30 +142,38 @@ void addLog(const QString &log)
     }
 }
 
-Smtp::State decodeAnsver(const QString &ansv)
+Smtp::State decodeAnsver(const QString &ansv, State last_State)
 {
-    static State login = ST_ERROR;
     State return_val = ST_ERROR;
+    static int st = 0;
+    st = st | last_State;
+
+    //qDebug() << "S: " << ansv;
 
     switch (ansv.left(3).toInt()) {
     case 220:
         return_val = ST_HELLO;
         break;
     case 250:
-        if(login == ST_LOGIN_OK)
-            return_val = ST_TO;
-        else
+        if(st == 0)
             return_val = ST_AUTH;
+        else if(st == (ST_LOGIN_OK))
+            return_val = ST_TO;
+        else if(st == (ST_LOGIN_OK | ST_TO_OK))
+            return_val = ST_DATA;
+        else if(st == (ST_LOGIN_OK | ST_TO_OK | ST_DATA_OK))
+            return_val = ST_END;
         break;
     case 334:
         return_val = ST_LOGIN;
         break;
     case 235:
-        login = ST_LOGIN_OK;
+        st = st | ST_LOGIN_OK;
         return_val = ST_FROM;
         break;
     case 354:
-        return_val = ST_DATA;
+        st = st | ST_DATA_OK;
+        return_val = ST_DATA_OK;
         break;
     default:
         return_val = ST_ERROR;
