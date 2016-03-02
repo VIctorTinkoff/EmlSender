@@ -27,21 +27,18 @@ EmlMessage::EmlMessage(QObject *parent)
 QString *EmlMessage::createMessage(const QString &body)
 {
     m_body = body;
-    Eml::Header h(m_subject);
+    Eml::Header h(m_sender,  m_to, m_subject);
+
     m_message.append(h.header);
 
-//      Eml::Part p(m_body);
-      Eml::MultiPart p(m_body);
-
-      m_message.append(p.part);
+    Eml::MultiPart p(m_body);
 
     for (int i = 0; i < m_attach.count(); ++i)
     {
         p.attach(m_attach.at(i));
-        m_message.append(p.part);
+
     }
-
-
+     m_message.append(p.part);
 
 
     QFile f("test.eml");
@@ -76,9 +73,9 @@ const QByteArray &EmlMessage::from()
     return m_sender;
 }
 
-const QByteArray &EmlMessage::to()
+const QVector<QByteArray> &EmlMessage::to()
 {
-    return m_to.at(0);
+    return m_to;
 }
 
 void EmlMessage::attach(const QString &attach)

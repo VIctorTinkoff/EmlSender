@@ -8,14 +8,18 @@
 #include "eml.h"
 #include "emlsslsocket.h"
 #include "smtp.h"
+#include <QQueue>
 
 EmlSSlSocket::EmlSSlSocket(EmlMessage *mes, QObject *parent)
     : QObject(parent)
-    , m_p_message(mes)
     , m_account(Eml::Account())
 {
     m_p_socket = NULL;
     m_nport = Eml::port(Eml::S_POP3);
+
+    m_p_message = mes;
+    m_recipiens = m_p_message->to();
+
     connect(this,SIGNAL(signalError(QString)),this, SLOT(slotError(QString)));
 
     qDebug() << m_p_message->mesage();
@@ -112,73 +116,71 @@ void EmlSSlSocket::socketEncripted()
 
 void EmlSSlSocket::socketReadyRead()
 {
-    static bool is_auth = false;
+    static Smtp::State st = Smtp::ST_ERROR;
 
     QString  ansv = QString::fromUtf8(m_p_socket->readAll());
-    qDebug() << "S:" << ansv;
-    Smtp::addLog(QString("S:" + ansv).replace(QRegularExpression("\r\n$"),""));
+    QByteArray tmp_arr;
 
-    if (ansv.contains("220"))
-    {
+    st = Smtp::decodeAnsver(ansv);
+
+
+    switch (st) {
+    case Smtp::ST_HELLO:
         Smtp::hello(m_account, m_p_socket);
-    }
-    else if (ansv.contains("250") && !is_auth)
-    {
+        break;
+    case Smtp::ST_AUTH:
         Smtp::checkAuthMethod(ansv);
-        //        if(!Smtp::findedAuthMethod().isEmpty() )
-        //        {
         m_p_socket->write(Smtp::findedAuthMethod());
-        //        }
-    }
-    else if (ansv.contains("334"))
-    {
+        break;
+    case Smtp::ST_LOGIN:
         Smtp::login(m_account, m_p_socket, ansv);
+        break;
+    case Smtp::ST_FROM:{
+        tmp_arr = "MAIL FROM: " + m_account.login + " \r\n";
+        qDebug() <<"U: " << tmp_arr ;
+        m_p_socket->write(tmp_arr);
     }
-    else if (ansv.contains("235"))
-    {
-        is_auth = true;
-        qDebug() << "MAIL FROM: " + m_p_message->from()+ " \r\n";
-        m_p_socket->write("MAIL FROM: " + m_p_message->from()+ " \r\n");
-    }
-    else if (ansv.contains("250") && is_auth)
-    {
-        static int id = 0;
-        if(id == 0)
-        {
-            QByteArray msg("RCPT TO: " + m_p_message->to() + " \r\n");
-            qDebug()  << msg;
-            m_p_socket->write(msg);
-            id++;
-        }
+    case Smtp::ST_TO:
+    case Smtp::ST_DATA:
+        static Smtp::State send_state = Smtp::ST_TO;
 
-        if (id == 1 )
-        {
-            QByteArray data("DATA \r\n");
-            qDebug() << data;
+        switch (send_state) {
+        case Smtp::ST_TO:
+            if (!m_recipiens.isEmpty())
+            {
+                QString rcpt(m_recipiens.front());
+                m_recipiens.pop_front();
 
-            m_p_socket->write(data);
-            id++;
+                rcpt.replace(QRegularExpression(".*<"),"");
+                rcpt.replace(QRegularExpression(">"),"");
 
-        }
-        if (id == 2 )
-        {
-            //qDebug()<< "start:";
-            //qDebug()<<  *m_p_message->createMessage("Hello this is body");
-            //qDebug() << " end:";
-            //QByteArray ba = (*m_p_message->createMessage("Hello this is body")).toLatin1();
+                tmp_arr = "RCPT TO: " + rcpt.toLatin1() + " \r\n";
+                qDebug() <<"U:" << tmp_arr;
+                m_p_socket->write(tmp_arr);
+            }
+            else
+            {
+                send_state =Smtp::ST_DATA;
+            }
+            break;
+        case Smtp::ST_DATA:
+            tmp_arr = "DATA \r\n";
+            qDebug() << tmp_arr;
+            m_p_socket->write(tmp_arr);
+            send_state = Smtp::ST_DATA_END;
+            break;
+        case Smtp::ST_DATA_END:
             m_p_socket->write(m_p_message->mesage().toLatin1());
             m_p_socket->write(" \r\n.\r\n ");
-            id++;
-        }
-        if (id == 3)
-        {
+            send_state = Smtp::ST_END;
+            break;
+        case Smtp::ST_END:
             m_p_socket->write("QUIT \r\n");
+            break;
         }
+    default:
+        break;
     }
-
-
-
-
 
 }
 

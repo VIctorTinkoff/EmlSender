@@ -22,11 +22,33 @@ enum Auth_Method {
     NO_FIND_METHOD
 };
 
+enum State{
+    ST_HELLO,
+    ST_AUTH,
+    ST_LOGIN,
+    ST_LOGIN_OK,
+    ST_LOGIN_ERR,
+    ST_FROM,
+    ST_FROM_OK,
+    ST_FROM_ERR,
+    ST_TO,
+    ST_TO_OK,
+    ST_TO_ERR,
+    ST_DATA,
+    ST_DATA_OK,
+    ST_DATA_ERR,
+    ST_DATA_END,
+    ST_END,
+    ST_ERROR
+};
+
 void hello(const Eml::Account & account, QSslSocket *sock);
 bool checkAuthMethod(const QString &ansver);
 
 Smtp::Auth_Method authMethod(const QString & str);
 Smtp::Auth_Method authMethod();
+
+Smtp::State decodeAnsver(const QString & ansv);
 
 QByteArray findedAuthMethod();
 

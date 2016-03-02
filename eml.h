@@ -2,6 +2,7 @@
 #define EML_H
 #include <QObject>
 #include <QFile>
+#include <QByteArray>
 
 namespace Eml {
 
@@ -17,15 +18,6 @@ enum Ports{
     NO_PORT
 };
 
-struct Account {
-    Account();
-    Account(const QByteArray & p,const QByteArray & l,const QString & h );
-    Account &operator =(const Account &a);
-    QByteArray passwd;
-    QByteArray login;
-    QString hostName;
-};
-
 
 //QString eml_date();
 QString eml_createUniqueBoundId(const QString &name = "PART");
@@ -35,8 +27,12 @@ QString eml_create_tag(const QString &str_val);
  * 'Q' - encoding is similar to the "Quoted-Printable" content-transfer-encoding defined in RFC 2045.
  */
 QString enc(const QString &str, QChar coding='B');
+
+
+
 struct Header{
     Header(const QString &subject);
+    Header(const QString &from, const QVector<QByteArray> &to, const QString &subject, const QString &cc="", const QString &bcc="");
     QString header;
 };
 
@@ -52,6 +48,18 @@ struct MultiPart{
     QString part;
     QString part_id;
 };
+
+struct Account {
+    Account();
+    Account(const QByteArray & p,const QByteArray & l,const QString & h );
+    Account &operator =(const Account &a);
+    QByteArray passwd;
+    QString hostName;
+    QByteArray login;
+
+};
+
+
 
 int port(Eml::Ports p);
 

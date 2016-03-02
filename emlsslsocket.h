@@ -2,6 +2,7 @@
 #define EMLSSLSOCKET_H
 
 #include <QObject>
+#include <QQueue>
 #include <QHostAddress>
 #include "emlmessage.h"
 
@@ -13,9 +14,11 @@ class QSslSocket;
 class QCryptographicHash;
 class QSslError;
 
+
 class EmlSSlSocket : public QObject
 {
     Q_OBJECT
+
 public:
     explicit EmlSSlSocket(EmlMessage * mes = 0, QObject *parent = 0);
     virtual ~EmlSSlSocket();
@@ -32,6 +35,7 @@ private:
     QSslSocket * m_p_socket;
     EmlMessage * m_p_message;
     Eml::Account m_account;
+    QVector<QByteArray> m_recipiens;
 
     int m_nport;
     QString m_lastError;

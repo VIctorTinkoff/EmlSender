@@ -96,9 +96,8 @@ void login(const Eml::Account &account, QSslSocket *sock, const QString &ansv)
         sock->write(loginPlain(account)+"\r\n");
         break;
     case Smtp::LOGIN:
-        QString str = ansv;
+        QString str = ansv.right(ansv.size()-3);
 
-        str.replace(QRegularExpression("334"),"");
         str = QByteArray::fromBase64(str.toUtf8());
 
         if(str.contains("USERNAME",Qt::CaseInsensitive))
@@ -141,6 +140,39 @@ void addLog(const QString &log)
 
         f.close();
     }
+}
+
+Smtp::State decodeAnsver(const QString &ansv)
+{
+    static State login = ST_ERROR;
+    State return_val = ST_ERROR;
+
+    switch (ansv.left(3).toInt()) {
+    case 220:
+        return_val = ST_HELLO;
+        break;
+    case 250:
+        if(login == ST_LOGIN_OK)
+            return_val = ST_TO;
+        else
+            return_val = ST_AUTH;
+        break;
+    case 334:
+        return_val = ST_LOGIN;
+        break;
+    case 235:
+        login = ST_LOGIN_OK;
+        return_val = ST_FROM;
+        break;
+    case 354:
+        return_val = ST_DATA;
+        break;
+    default:
+        return_val = ST_ERROR;
+        break;
+    }
+
+    return return_val;
 }
 
 }//namespace Smtp

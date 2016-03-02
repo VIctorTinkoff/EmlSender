@@ -41,7 +41,7 @@ public:
     void add_bcc(const QByteArray &bcc_str);
     void set_subject(const QString &subject);
     const QByteArray &from();
-    const QByteArray &to();
+    const QVector<QByteArray> &to();
 
     void attach(const QString &attach);
 
@@ -52,14 +52,14 @@ private:
 
     QByteArray m_sender;
 
-    QList<QByteArray> m_to;
-    QList<QByteArray> m_cc;
-    QList<QByteArray> m_bcc;
+    QVector<QByteArray> m_to;
+    QVector<QByteArray> m_cc;
+    QVector<QByteArray> m_bcc;
 
     QString m_subject;
     QString m_body;
 
-    QList<QString> m_attach;
+    QVector<QString> m_attach;
 
     EmlEncodeType m_hEnc;
 
