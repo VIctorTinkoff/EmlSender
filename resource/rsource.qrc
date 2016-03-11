@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="CON_EN">../images/connection enable.png</file>
+        <file alias="CON_DIS">../images/connection_disable.png</file>
+        <file alias="TOOLS">../images/Windows_Tools.png</file>
+        <file alias="QUIT">../images/Gloss PNGShutdown_Quit_Dock.png</file>
+        <file alias="OP_CONF_FILE">../images/Dossiers Config.png</file>
+    </qresource>
+</RCC>
