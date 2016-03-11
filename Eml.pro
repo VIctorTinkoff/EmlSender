@@ -13,19 +13,32 @@ TEMPLATE = app
 
 
 SOURCES +=\
-        mainwindow.cpp \
-    emlmessage.cpp \
-    eml.cpp \
-    emlsocket.cpp \
-    emlsslsocket.cpp \
-    smtp.cpp \
-    main.cpp
+        ./src/mainwindow.cpp \
+    ./src/emlmessage.cpp \
+    ./src/eml.cpp \
+    ./src/emlsslsocket.cpp \
+    ./src/smtp.cpp \
+    ./src/main.cpp \
+    ./src/emlheader.cpp \
+    ../JsonSave/account.cpp
 
-HEADERS  += mainwindow.h \
-    emlmessage.h \
-    eml.h \
-    emlsocket.h \
-    emlsslsocket.h \
-    smtp.h
 
-FORMS    += mainwindow.ui
+HEADERS  += ./include/mainwindow.h \
+    ./include/emlmessage.h \
+    ./include/eml.h \
+    ./include/emlsslsocket.h \
+    ./include/smtp.h \
+    ./include/emlheader.h \
+    ../JsonSave/account.h
+
+
+FORMS    += ./ui/mainwindow.ui
+
+
+DISTFILES +=
+
+RESOURCES += \
+    ./resource/rsource.qrc
+
+INCLUDEPATH += ./include \
+   ../JsonSave
