@@ -55,6 +55,7 @@ enum State{
 };
 
 void hello(QSharedPointer<Eml::Account> account, QSslSocket *sock);
+
 bool checkAuthMethod(const QString &ansver);
 
 Smtp::Auth_Method authMethod(const QString & str);

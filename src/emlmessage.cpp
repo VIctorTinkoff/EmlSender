@@ -20,10 +20,9 @@ EmlMessage::EmlMessage(QTextStream *s_out, QObject *parent)
     , encode_out_format("=?UTF-8?%1?%2?= %3")
     , exp_enc_search_addres("^(.*)(<.*>)$")
 {
-    out_stream.reset(s_out);
-
     m_hEnc = B_ENC;
 
+    out_stream.reset(s_out);
     m_eml_heder.reset(new Eml::Header());
 
 }

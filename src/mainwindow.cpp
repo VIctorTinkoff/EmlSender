@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "connectdialog.h"
 #include <QDebug>
 #include <QStatusBar>
 #include <QSettings>
 #include <QComboBox>
+#include "taskform.h"
+
 
 
 extern QSettings sett;
@@ -15,18 +16,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    m_p_socket = new EmlSocket(this);
-	
-	loadSetting();
-	
+    m_p_form = new TaskForm;
+
+    setCentralWidget(m_p_form);
+    m_p_message = 0;
+
+
+    m_p_socket = new SmtpSSlSocket(this);
+    loadSetting();
+
+    connect(m_p_socket,SIGNAL(sendRecipientsTo()),this,SLOT(slotSendRecipientTo()));
+    connect(m_p_socket,SIGNAL(smtpSendData()),this,SLOT(slotSendSmtpData()));
+
 }
 
 MainWindow::~MainWindow()
 {
 
-	saveSetting();
+    saveSetting();
 
-	delete ui;
+    delete ui;
     delete m_p_socket;
 }
 
@@ -39,90 +48,81 @@ void MainWindow::loadSetting()
 {
 }
 
-void MainWindow::connect_smtp(const QString &hostName, int nPort)
+void MainWindow::createMessage(EmlMessage *message)
 {
-	if (!m_p_socket)
-	{
-//        m_p_socket = new QSslSocket(this);
-
-//        connect(m_p_socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-//            this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
-//        connect(m_p_socket, SIGNAL(encrypted()),
-//            this, SLOT(socketEncripted()));
-//        connect(m_p_socket, SIGNAL(error(QAbstractSocket::SocketError)),
-//            this, SLOT(socketError(QAbstractSocket::SocketError)));
-//        connect(m_p_socket, SIGNAL(sslErrors(QList<QSslError>)),
-//            this, SLOT(sslError(QList<QSslError>)));
-//        connect(m_p_socket, SIGNAL(readyRead()),
-//            this, SLOT(socketReadyRead()));
-	}
-
-//	m_p_socket->connectToHostEncrypted(hostName, nPort);
 
 }
 
-void MainWindow::on_accountAddButton_clicked()
-{
-}
+
 
 void MainWindow::on_actionCnnect_smtp_triggered()
 {
+    m_p_socket->smtp_connect(m_p_form->account());
 }
 
-void MainWindow::on_accountCBox_currentIndexChanged(int index)
-{
-}
 
-void MainWindow::on_editAccountButton_clicked()
-{
-}
 
-void MainWindow::on_taskDeleteButton_clicked()
-{
-}
 
-void MainWindow::on_taskInsertButton_clicked()
-{
-}
 
-void MainWindow::updateEnabledStatate()
+void MainWindow::slotSendRecipientTo()
 {
-	qDebug() << "==== updateEnabledStatate";
-}
+    static Task * task = m_p_form->tasks().front();
+    static QStringList * addresList = &task->addressList;
 
-void MainWindow::socketStateChanged(QAbstractSocket::SocketState st)
-{
-	qDebug() << "=== socketStateChanged";
+    static int id = addresList->count();
 
-}
+    if (id < 0)
+    {
+        qWarning("slotSendRecipoentTo : End data from addresList" );
+        return;
+    }
 
-void MainWindow::socketEncripted()
-{
-	qDebug() << "==== socketEncripted";
-}
-
-void MainWindow::socketReadyRead()
-{
-	qDebug() << "==== socketReadyRead";
+    if(--id >= 0)
+    {
+        qDebug() << "+++++ send recipient to ++++++++ "<<id << ":" << addresList->at(id) ;
+        m_p_socket->slotSendRecipient(addresList->at(id));
+    }
+    else
+    {
+        m_p_socket->slotSendRecipient();
+        qDebug() << "+++++ send recipient to ++++++++ DATA " ;
+    }
 
 }
 
-void MainWindow::socketSendData(const QString &message)
+void MainWindow::slotSendSmtpData()
 {
-	qDebug() << "==== socketSendData";
+    QString tmp;
+
+    m_p_message = new EmlMessage;
+    m_p_message->out_stream.reset(new QTextStream(&tmp,QIODevice::ReadWrite));
+    m_p_message->header().data()->set_from(m_p_form->account()->login.toUtf8());
+
+    Task * task = m_p_form->tasks().first();
+    for (int i = 0; i < task->addressList.count(); ++i)
+    {
+        m_p_message->header().data()->append_to(task->addressList.at(i).toUtf8());
+    }
+
+    task = 0;
+
+    m_p_message->header().data()->set_subject("Hello this is test");
+
+
+    m_p_message->createMessage("Hello");
+
+
+    ui->textEdit->append(tmp);
+
+    delete m_p_message;
+
+    m_p_socket->slotSmtpSendData(tmp.toLocal8Bit(),true);
+
+
+    qDebug() << "++++++ send Data ++++++++";
 }
 
-void MainWindow::socketError(QAbstractSocket::SocketError err)
+void MainWindow::on_pushButton_clicked()
 {
-	qDebug() << "==== socketError";
-}
-
-void MainWindow::sslError(const QList<QSslError> &err_s)
-{
-	qDebug() << "==== sslError";
-}
-
-void MainWindow::slotError(const QString & err)
-{
-	qDebug() << "==== slotError";
+    slotSendSmtpData();
 }

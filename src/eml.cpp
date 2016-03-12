@@ -81,7 +81,7 @@ QString eml_create_tag(const QVector<QByteArray> &va_list)
     {
         result.append(eml_create_tag(va_list.at(i)));
         if (i < va_list.count() - 1)
-            result.append("\r\n\t");
+            result.append(",\r\n\t");
     }
     return result;
 }

@@ -5,8 +5,9 @@
 #include <QSslSocket>
 #include "eml.h"
 #include "recipientmodel.h"
-#include "emlsocket.h"
-
+#include "smtpsslsocket.h"
+#include "taskform.h"
+#include "emlmessage.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,35 +26,27 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    EmlSocket * m_p_socket;
-	QVector< Eml::Account *> m_accounts;
-	QList< Eml::Recipient *> m_recipients;
-	RecipientModel *m_model;
+    SmtpSSlSocket * m_p_socket;
+    TaskForm * m_p_form;
+    EmlMessage * m_p_message;
+
 
 private:
 	void saveSetting();
 	void loadSetting();
+    void createMessage(EmlMessage * message);
+
 
 
 public slots:
-	void connect_smtp(const QString &hostName, int nPort);
-	void on_accountAddButton_clicked();
-	void on_actionCnnect_smtp_triggered();
-	void on_accountCBox_currentIndexChanged(int index);
-	void on_editAccountButton_clicked();
-	void on_taskDeleteButton_clicked();
-	void on_taskInsertButton_clicked();
-
+    void on_actionCnnect_smtp_triggered();
 
 private slots :
-	void updateEnabledStatate();
-	void socketStateChanged(QAbstractSocket::SocketState st);
-	void socketEncripted();
-	void socketReadyRead();
-	void socketSendData(const QString &message);
-	void socketError(QAbstractSocket::SocketError err);
-	void sslError(const QList<QSslError> &err_s);
-	void slotError(const QString & err);
+
+    void slotSendRecipientTo();
+    void slotSendSmtpData();
+
+    void on_pushButton_clicked();
 };
 
 #endif // MAINWINDOW_H
